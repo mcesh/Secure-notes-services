@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  note-db:
+    image: postgres:14-bullseye
+    container_name: note-postgres-db
+    ports:
+      - "5439:5432"
+    environment:
+      POSTGRES_DB: notedb
+      POSTGRES_USER: note-user
+      POSTGRES_PASSWORD: Welcome123
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+    networks:
+      - note-db-network
+
+networks:
+  note-db-network:
+    driver: bridge
