@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -57,13 +58,17 @@ public class UserServiceImpl implements UserService{
 
     @Override
     public List<UserResponse> getAllUsers() {
-        List<UserResponse> userResponses = new ArrayList<>();
-        List<UserEntity> userEntities = userRepository.findAll();
-        userEntities.forEach(userEntity -> {
-            UserResponse userResponse = modelMapper.map(userEntity, UserResponse.class);
-            userResponses.add(userResponse);
-        });
-        return userResponses;
+        return userRepository.findAll()
+                .stream()
+                .map(userEntity -> new UserResponse(userEntity.getUserId(), userEntity.getUserName(),
+                        userEntity.getEmail(), userEntity.isAccountNonLocked(), userEntity.isAccountNonExpired(),
+                        userEntity.isCredentialsNonExpired(), userEntity.isEnabled(),
+                        userEntity.getCredentialsExpiryDate(), userEntity.getAccountExpiryDate(),
+                        userEntity.getTwoFactorSecret(), userEntity.isTwoFactorEnabled(),
+                        userEntity.getSignUpMethod(), userEntity.getRole(), userEntity.getCreatedDate(),
+                        userEntity.getUpdatedDate()))
+                .collect(Collectors.toList());
+
     }
 
     @Override

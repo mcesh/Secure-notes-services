@@ -23,6 +23,16 @@ spring:
         format_sql: false
         show_sql: false
         dialect: org.hibernate.dialect.PostgreSQLDialect
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: xxxxxxxxxx
+            client-secret: xxxxxxxxxxxxxxx
+            scope:
+              - profile
+              - email
 
   mail:
     host: smtp.example.com
@@ -37,5 +47,8 @@ spring:
             enable: true
 
 app:
+  token:
+    secret: xxxxxxxxxxxxxxx
+    expirationMs: 864000000
   front-end:
     url: http://localhost:3000
