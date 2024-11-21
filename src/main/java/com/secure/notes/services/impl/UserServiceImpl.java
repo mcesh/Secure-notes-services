@@ -60,15 +60,20 @@ public class UserServiceImpl implements UserService{
     public List<UserResponse> getAllUsers() {
         return userRepository.findAll()
                 .stream()
-                .map(userEntity -> new UserResponse(userEntity.getUserId(), userEntity.getUserName(),
-                        userEntity.getEmail(), userEntity.isAccountNonLocked(), userEntity.isAccountNonExpired(),
-                        userEntity.isCredentialsNonExpired(), userEntity.isEnabled(),
-                        userEntity.getCredentialsExpiryDate(), userEntity.getAccountExpiryDate(),
-                        userEntity.getTwoFactorSecret(), userEntity.isTwoFactorEnabled(),
-                        userEntity.getSignUpMethod(), userEntity.getRole(), userEntity.getCreatedDate(),
-                        userEntity.getUpdatedDate()))
+                .map(userEntity -> new UserResponse(
+                        userEntity.getUserId(),
+                        userEntity.getUserName(),
+                        userEntity.getEmail(),
+                        userEntity.isAccountNonLocked(),
+                        userEntity.isAccountNonExpired(),
+                        userEntity.isCredentialsNonExpired(),
+                        userEntity.isEnabled(),
+                        userEntity.getCredentialsExpiryDate(),
+                        userEntity.getAccountExpiryDate(),
+                        userEntity.isTwoFactorEnabled(),
+                        List.of(userEntity.getRole().getRoleName().name())
+                ))
                 .collect(Collectors.toList());
-
     }
 
     @Override

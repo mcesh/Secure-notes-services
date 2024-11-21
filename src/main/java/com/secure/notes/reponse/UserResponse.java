@@ -7,13 +7,14 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
 public class UserResponse {
 
-    private Long userId;
-    private String userName;
+    private Long id;
+    private String username;
     private String email;
     private boolean accountNonLocked;
     private boolean accountNonExpired;
@@ -21,16 +22,14 @@ public class UserResponse {
     private boolean enabled;
     private LocalDate credentialsExpiryDate;
     private LocalDate accountExpiryDate;
-    private String twoFactorSecret;
     private boolean isTwoFactorEnabled;
-    private String signUpMethod;
-    private Role role;
-    private LocalDateTime createdDate;
-    private LocalDateTime updatedDate;
+    private List<String> roles;
 
-    public UserResponse(Long userId, String userName, String email, boolean accountNonLocked, boolean accountNonExpired, boolean credentialsNonExpired, boolean enabled, LocalDate credentialsExpiryDate, LocalDate accountExpiryDate, String twoFactorSecret, boolean isTwoFactorEnabled, String signUpMethod, Role role, LocalDateTime createdDate, LocalDateTime updatedDate) {
-        this.userId = userId;
-        this.userName = userName;
+    public UserResponse(Long id, String username, String email, boolean accountNonLocked, boolean accountNonExpired,
+                        boolean credentialsNonExpired, boolean enabled, LocalDate credentialsExpiryDate,
+                        LocalDate accountExpiryDate, boolean isTwoFactorEnabled, List<String> roles) {
+        this.id = id;
+        this.username = username;
         this.email = email;
         this.accountNonLocked = accountNonLocked;
         this.accountNonExpired = accountNonExpired;
@@ -38,11 +37,7 @@ public class UserResponse {
         this.enabled = enabled;
         this.credentialsExpiryDate = credentialsExpiryDate;
         this.accountExpiryDate = accountExpiryDate;
-        this.twoFactorSecret = twoFactorSecret;
         this.isTwoFactorEnabled = isTwoFactorEnabled;
-        this.signUpMethod = signUpMethod;
-        this.role = role;
-        this.createdDate = createdDate;
-        this.updatedDate = updatedDate;
+        this.roles = roles;
     }
 }
