@@ -31,7 +31,7 @@ public class OAuth2LoginSuccessHandler extends SavedRequestAwareAuthenticationSu
 
     private final UserService userService;
 
-    private JwtUtils jwtUtils;
+    private final JwtUtils jwtUtils;
 
     private final RoleRepository roleRepository;
 
@@ -63,6 +63,15 @@ public class OAuth2LoginSuccessHandler extends SavedRequestAwareAuthenticationSu
 
             userService.findByEmail(email)
                     .ifPresentOrElse(user -> {
+                        if (!user.isAccountNonLocked()) {
+                            String lockedRedirectUrl = frontendUrl + "/access-denied"; // TODO implement React relevant page and change this URI path
+                            try {
+                                getRedirectStrategy().sendRedirect(request, response, lockedRedirectUrl);
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
+                            return;
+                        }
                         DefaultOAuth2User oauthUser = new DefaultOAuth2User(
                                 List.of(new SimpleGrantedAuthority(user.getRole().getRoleName().name())),
                                 attributes,
