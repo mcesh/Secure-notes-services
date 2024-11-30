@@ -12,13 +12,22 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
@@ -35,6 +44,8 @@ public class OAuth2LoginSuccessHandler extends SavedRequestAwareAuthenticationSu
 
     private final RoleRepository roleRepository;
 
+    private final OAuth2AuthorizedClientService authorizedClientService;
+
     @Value("${app.front-end.url}")
     private String frontendUrl;
 
@@ -44,23 +55,34 @@ public class OAuth2LoginSuccessHandler extends SavedRequestAwareAuthenticationSu
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws ServletException, IOException {
         OAuth2AuthenticationToken oAuth2AuthenticationToken = (OAuth2AuthenticationToken) authentication;
+        String emailFromGitHub = getEmailFromGitHub(oAuth2AuthenticationToken);
         if ("github".equals(oAuth2AuthenticationToken.getAuthorizedClientRegistrationId()) || "google".equals(oAuth2AuthenticationToken.getAuthorizedClientRegistrationId())) {
             DefaultOAuth2User principal = (DefaultOAuth2User) authentication.getPrincipal();
             Map<String, Object> attributes = principal.getAttributes();
-            String email = attributes.getOrDefault("email", "").toString();
-            String name = attributes.getOrDefault("name", "").toString();
+            String email;
+            if ("github".equals(oAuth2AuthenticationToken.getAuthorizedClientRegistrationId())){
+                email = emailFromGitHub;
+            }else {
+                email = attributes.getOrDefault("email", "").toString();
+                String name = attributes.getOrDefault("name", "").toString();
+            }
+
             if ("github".equals(oAuth2AuthenticationToken.getAuthorizedClientRegistrationId())) {
-                username = attributes.getOrDefault("login", "").toString();
+                assert email != null;
+                username = email.split("@")[0];
                 idAttributeKey = "id";
             } else if ("google".equals(oAuth2AuthenticationToken.getAuthorizedClientRegistrationId())) {
+                assert email != null;
                 username = email.split("@")[0];
                 idAttributeKey = "sub";
             } else {
                 username = "";
                 idAttributeKey = "id";
             }
-            System.out.println("HELLO OAUTH: " + email + " : " + name + " : " + username); //TODO remove this line
 
+            /** @Author: Siya Nxuseka
+             * @Description: manage OAuth2 login by authenticating users, redirect locked account and register new users
+             * */
             userService.findByEmail(email)
                     .ifPresentOrElse(user -> {
                         if (!user.isAccountNonLocked()) {
@@ -116,7 +138,13 @@ public class OAuth2LoginSuccessHandler extends SavedRequestAwareAuthenticationSu
         Map<String, Object> attributes = oauth2User.getAttributes();
 
         // Extract necessary attributes
-        String email = (String) attributes.get("email");
+        String email;
+        if ("github".equals(oAuth2AuthenticationToken.getAuthorizedClientRegistrationId())){
+            email = emailFromGitHub;
+        }else {
+            email = (String) attributes.get("email");
+        }
+
         System.out.println("OAuth2LoginSuccessHandler: " + username + " : " + email); // TODO remove this code
 
         Set<SimpleGrantedAuthority> authorities = new HashSet<>(oauth2User.getAuthorities().stream()
@@ -146,5 +174,34 @@ public class OAuth2LoginSuccessHandler extends SavedRequestAwareAuthenticationSu
         this.setDefaultTargetUrl(targetUrl);
         super.onAuthenticationSuccess(request, response, authentication);
 
+    }
+
+    private String getEmailFromGitHub(OAuth2AuthenticationToken token) {
+        OAuth2AuthorizedClient client = authorizedClientService.loadAuthorizedClient(
+                token.getAuthorizedClientRegistrationId(),
+                token.getName());
+        OAuth2AccessToken accessToken = client.getAccessToken();
+
+        RestTemplate restTemplate = new RestTemplate();
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Authorization", "Bearer " + accessToken.getTokenValue());
+        HttpEntity<String> entity = new HttpEntity<>("", headers);
+
+        ResponseEntity<List<Map<String, Object>>> response = restTemplate.exchange(
+                "https://api.github.com/user/emails",
+                HttpMethod.GET,
+                entity,
+                new ParameterizedTypeReference<>() {
+                });
+
+        List<Map<String, Object>> emails = response.getBody();
+        if (emails != null && !emails.isEmpty()) {
+            for (Map<String, Object> email : emails) {
+                if (Boolean.TRUE.equals(email.get("primary"))) {
+                    return email.get("email").toString();
+                }
+            }
+        }
+        return null;
     }
 }
