@@ -28,14 +28,14 @@ spring:
       client:
         registration:
           google:
-            client-id: xxxxxxxxxx
-            client-secret: xxxxxxxxxxxxxxx
+            client-id: 1091697962196-tu0l7di3jaojct5upoe05a3r5ddbvcio.apps.googleusercontent.com
+            client-secret: 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
             scope:
               - profile
               - email
           github:
-            client-id: xxxxxxxxxxx
-            client-secret: xxxxxxxxxxxxxxxxxx
+            client-id: Ov23liO6vjt3BeMDk9dQ
+            client-secret: 8bb82bda0db6bf14773ba65b6eebf5435c8579c7
             scope:
               - read:user
               - user:email
@@ -44,7 +44,7 @@ spring:
     host: smtp.gmail.com
     port: 587
     username: siyathedev@gmail.com
-    password: xxxxxxxxxxxxxx
+    password: drPEKqVgD
     properties:
       mail:
         smtp:
@@ -54,7 +54,7 @@ spring:
 
 app:
   token:
-    secret: xxxxxxxxxxxxxxx
+    secret: DFFE5D3BC8855315D68FEEE7DEFA12D46823BF15ED46D990EDC2B4C3F1CAE41BBF22482D1A2A56C5268578659FE0E7621D1E2533BCFA6A68B53645FCF8FD5B37
     expirationMs: 864000000
   front-end:
     url: http://localhost:3000

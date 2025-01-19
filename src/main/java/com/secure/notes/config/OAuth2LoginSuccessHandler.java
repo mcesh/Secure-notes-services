@@ -11,6 +11,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
@@ -36,6 +37,7 @@ import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Component
+@Slf4j
 public class OAuth2LoginSuccessHandler extends SavedRequestAwareAuthenticationSuccessHandler {
 
     private final UserService userService;
@@ -55,13 +57,12 @@ public class OAuth2LoginSuccessHandler extends SavedRequestAwareAuthenticationSu
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws ServletException, IOException {
         OAuth2AuthenticationToken oAuth2AuthenticationToken = (OAuth2AuthenticationToken) authentication;
-        String emailFromGitHub = getEmailFromGitHub(oAuth2AuthenticationToken);
         if ("github".equals(oAuth2AuthenticationToken.getAuthorizedClientRegistrationId()) || "google".equals(oAuth2AuthenticationToken.getAuthorizedClientRegistrationId())) {
             DefaultOAuth2User principal = (DefaultOAuth2User) authentication.getPrincipal();
             Map<String, Object> attributes = principal.getAttributes();
             String email;
             if ("github".equals(oAuth2AuthenticationToken.getAuthorizedClientRegistrationId())){
-                email = emailFromGitHub;
+                email = getEmailFromGitHub(oAuth2AuthenticationToken);
             }else {
                 email = attributes.getOrDefault("email", "").toString();
                 String name = attributes.getOrDefault("name", "").toString();
@@ -140,7 +141,7 @@ public class OAuth2LoginSuccessHandler extends SavedRequestAwareAuthenticationSu
         // Extract necessary attributes
         String email;
         if ("github".equals(oAuth2AuthenticationToken.getAuthorizedClientRegistrationId())){
-            email = emailFromGitHub;
+            email = getEmailFromGitHub(oAuth2AuthenticationToken);
         }else {
             email = (String) attributes.get("email");
         }
